@@ -1,5 +1,10 @@
 package two.android.com.animations;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -7,54 +12,73 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     Button button;
-    Button btnRestart;
-    ArrayList<Integer> resources;
+    SensorManager sensorManager;
+    List<Sensor> sensorList1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         button = findViewById(R.id.button);
-        btnRestart = findViewById(R.id.BTN_restart);
-        resources = new ArrayList<>();
-        resources.add(R.anim.blink);
-        resources.add(R.anim.bounce);
-        resources.add(R.anim.fade_in);
-        resources.add(R.anim.fade_out);
-        resources.add(R.anim.flip);
-        resources.add(R.anim.rotate);
-        resources.add(R.anim.sequential);
-        resources.add(R.anim.slide_down);
-        resources.add(R.anim.slide_up);
-        resources.add(R.anim.together);
-        resources.add(R.anim.translate);
-        resources.add(R.anim.zoom_in);
-        resources.add(R.anim.zoom_out);
 
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensorList1 = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 button.clearAnimation();
-                Animation a = AnimationUtils.loadAnimation(MainActivity.this,getRandomAnim());
-                button.startAnimation(a);
+                Animation a = AnimationUtils.loadAnimation(MainActivity.this,R.anim.wiggle);
+               button.startAnimation(a);
+
             }
         });
+
+        // ---------
+
+        SensorEventListener sv1 = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+
+
+
+                if(check(event.values)){
+                   button.clearAnimation();
+                    Animation a = AnimationUtils.loadAnimation(MainActivity.this,R.anim.wiggle);
+                    button.startAnimation(a);
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
+
+        sensorManager.registerListener(sv1,sensorList1.get(0),SensorManager.SENSOR_DELAY_UI);
+        //0 przyspieszenie
+        //2 magnetometr
+        //3 bezwzgledna orientacja/polozenie na podstawie 3 czujnikow FUSION
+
+
     }
 
-    public int getRandomAnim(){
-        Random random = new Random();
-        int i = random.nextInt(14);
+    public boolean check(float[] values){
+        float x= values[0];
+        float y= values[1];
+        float z= values[2];
+        double decide = (Math.sqrt((x*x)+(y*y)+(z*z)))-9.81;
+        if(decide>1.0) return true; else return false;
 
-        return resources.get(i);
+
     }
 
-    public void restart(View v){
-        button.clearAnimation();
-        recreate();
-    }
 }
+
+/*
+    obrazek
+ */
